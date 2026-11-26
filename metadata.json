@@ -1,0 +1,6 @@
+{
+  "name": "AI Mind Wave – Adaptive Edge Ambient Light Meditation",
+  "description": "Complete native Android Kotlin application and live interactive edge ambient light studio featuring Global Phone Mode and Silent Shiv Nada visual meditation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

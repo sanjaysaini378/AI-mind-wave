@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="mindwave_bg">#FF050711</color>
+    <color name="mindwave_indigo">#FF4F46E5</color>
+    <color name="mindwave_violet">#FF7C3AED</color>
+    <color name="mindwave_lunar">#FFEEF2FF</color>
+</resources>

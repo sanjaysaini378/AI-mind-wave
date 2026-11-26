@@ -1,0 +1,77 @@
+name: Build AI Mind Wave APK (Free Cloud Build)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle 8.10.2
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Locate Android project directory
+        id: locate
+        shell: bash
+        run: |
+          if [ -f "settings.gradle.kts" ]; then
+            echo "dir=." >> "$GITHUB_OUTPUT"
+          elif [ -f "AIMindWave-Android/settings.gradle.kts" ]; then
+            echo "dir=AIMindWave-Android" >> "$GITHUB_OUTPUT"
+          elif [ -f "android-app/settings.gradle.kts" ]; then
+            echo "dir=android-app" >> "$GITHUB_OUTPUT"
+          else
+            echo "Could not find settings.gradle.kts" >&2
+            exit 1
+          fi
+
+      - name: Decode optional Release Keystore from GitHub Secrets
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        working-directory: ${{ steps.locate.outputs.dir }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > release-keystore.jks
+          cat <<EOF > keystore.properties
+          storeFile=release-keystore.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Build Installable Debug APK
+        working-directory: ${{ steps.locate.outputs.dir }}
+        run: gradle assembleDebug --no-daemon
+
+      - name: Build Release APK
+        working-directory: ${{ steps.locate.outputs.dir }}
+        run: gradle assembleRelease --no-daemon
+
+      - name: Upload AI Mind Wave APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Mind-Wave-APKs
+          path: |
+            ${{ steps.locate.outputs.dir }}/app/build/outputs/apk/debug/*.apk
+            ${{ steps.locate.outputs.dir }}/app/build/outputs/apk/release/*.apk
+          retention-days: 30
